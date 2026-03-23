@@ -1,0 +1,16 @@
+# Local build and compiled classes
+/build/
+/WEB-INF/classes/
+*.class
+
+# Local Tomcat runtime bundle and deployment artifacts
+/tools/apache-tomcat-10.1.52/
+
+# Logs
+*.log
+/logs/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
