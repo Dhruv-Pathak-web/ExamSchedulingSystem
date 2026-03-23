@@ -5,6 +5,7 @@
 
 # Local Tomcat runtime bundle and deployment artifacts
 /tools/apache-tomcat-10.1.52/
+/tools/*.zip
 
 # Logs
 *.log
