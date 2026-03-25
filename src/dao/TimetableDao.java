@@ -27,6 +27,7 @@ public class TimetableDao {
 
     private static final LocalTime DAY_START_TIME = LocalTime.of(9, 0);
     private static final DateTimeFormatter SLOT_TIME_FORMAT = DateTimeFormatter.ofPattern("hh:mm a");
+    private static final int MAX_COURSES_PER_SHIFT = 3;
 
     private final SubjectDao subjectDao = new SubjectDao();
     private final RoomDao roomDao = new RoomDao();
@@ -120,7 +121,8 @@ public class TimetableDao {
                 .thenComparing(Subject::getDepartment, String.CASE_INSENSITIVE_ORDER)
                 .thenComparing(Subject::getSubjectCode, String.CASE_INSENSITIVE_ORDER));
 
-        Map<String, Set<String>> classSessionUsage = new HashMap<>();
+        Map<String, Set<LocalDate>> classDailyUsage = new HashMap<>();
+        Map<String, Set<String>> classUsageBySession = new HashMap<>();
         Map<String, Set<Integer>> roomUsageBySession = new HashMap<>();
         List<PlannedAllocation> plannedRows = new ArrayList<>();
         int roomPointer = 0;
@@ -147,7 +149,8 @@ public class TimetableDao {
                     examDurationMinutes,
                     usableRooms,
                     roomPointer,
-                    classSessionUsage,
+                    classDailyUsage,
+                    classUsageBySession,
                     roomUsageBySession);
 
             if (assignment == null) {
@@ -176,18 +179,25 @@ public class TimetableDao {
                                            int examDurationMinutes,
                                            List<Room> rooms,
                                            int roomPointer,
-                                           Map<String, Set<String>> classSessionUsage,
+                                           Map<String, Set<LocalDate>> classDailyUsage,
+                                           Map<String, Set<String>> classUsageBySession,
                                            Map<String, Set<Integer>> roomUsageBySession) {
 
         String classKey = buildClassKey(subject.getDepartment(), subject.getSemester());
 
         for (int dayOffset = 0; dayOffset < 3650; dayOffset++) {
             LocalDate date = startDate.plusDays(dayOffset);
-            Set<String> occupiedSessions = classSessionUsage.computeIfAbsent(classKey, key -> new HashSet<>());
+            Set<LocalDate> occupiedDays = classDailyUsage.computeIfAbsent(classKey, key -> new HashSet<>());
+            if (occupiedDays.contains(date)) {
+                continue;
+            }
 
             for (int slot = 1; slot <= slotsPerDay; slot++) {
                 String sessionKey = date + "#" + slot;
-                if (occupiedSessions.contains(sessionKey)) {
+                Set<String> classesInSession =
+                        classUsageBySession.computeIfAbsent(sessionKey, key -> new HashSet<>());
+
+                if (!classesInSession.contains(classKey) && classesInSession.size() >= MAX_COURSES_PER_SHIFT) {
                     continue;
                 }
 
@@ -204,7 +214,8 @@ public class TimetableDao {
                         usedRooms);
 
                 if (plan != null) {
-                    occupiedSessions.add(sessionKey);
+                    classesInSession.add(classKey);
+                    occupiedDays.add(date);
                     return plan;
                 }
             }

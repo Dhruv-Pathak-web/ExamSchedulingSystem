@@ -75,7 +75,7 @@
             <div>
                 <p class="eyebrow">Planning</p>
                 <h1 class="hero-title">Exam Timetable</h1>
-                <p class="hero-subtitle">Rules applied: no same-time clash per department-semester, slot-based scheduling using your slots/day and duration, multi-room allocation per subject, and full regenerate on each run.</p>
+                <p class="hero-subtitle">Rules applied: one exam/day per department-semester, maximum 3 courses per shift, slot-based scheduling using your slots/day and duration, multi-room allocation per subject, and full regenerate on each run.</p>
             </div>
 
             <% if ("generated".equals(success)) { %>
